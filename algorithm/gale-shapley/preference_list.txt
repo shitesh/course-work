@@ -1,0 +1,4 @@
+M m1 w2,w1
+M m2 w1,w2
+F w1 m2,m1
+F w2 m1,m2
