@@ -22,7 +22,7 @@ def perform_dfs(test_dict):
         if current_node in destination_node_list:
             return current_node, path_cost
 
-        if adjacency_dict.has_key(current_node):
+        if current_node in adjacency_dict:
             for node in adjacency_dict[current_node]:
                 if node not in visited_list:
                     stack.appendleft(node)
@@ -50,7 +50,7 @@ def perform_bfs(test_dict):
         if current_node in destination_node_list:
             return current_node, path_cost
 
-        if adjacency_dict.has_key(current_node):
+        if current_node in adjacency_dict:
             for node in adjacency_dict[current_node]:
                 if node not in visited_list:
                     queue.append(node)
