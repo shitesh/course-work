@@ -5,17 +5,19 @@ from collections import deque
 def perform_dfs(test_dict):
     stack = deque([])
     visited_list = []
-    path_cost = -1
 
-    start_node = test_dict['start_node']
+    source_node = test_dict['source_node']
     adjacency_dict = test_dict['adjacency_dict']
     destination_node_list = test_dict['destination_node_list']
+    start_time = test_dict['start_time']
 
-    stack.appendleft(start_node)
+    path_cost = start_time - 1
+    stack.appendleft(source_node)
+    visited_list.append(source_node)
+
     while stack:
         current_node = stack.popleft()
         path_cost += 1
-        visited_list.append(current_node)
 
         if current_node in destination_node_list:
             return current_node, path_cost
@@ -24,25 +26,26 @@ def perform_dfs(test_dict):
             for node in adjacency_dict[current_node]:
                 if node not in visited_list:
                     stack.appendleft(node)
+                    visited_list.append(node)
     # program reached here means parsing is over and none of the goal states are reached
     return None, -1
 
-def perform_bfs():
+def perform_bfs(test_dict):
+    #todo: not maintaining an explored set as it is not required in this case. check on this.
     queue = deque([])
     visited_list = []
-    path_cost = -1
 
-    start_node = test_dict['start_node']
-    start_node = test_dict['start_node']
+    source_node = test_dict['source_node']
     adjacency_dict = test_dict['adjacency_dict']
     destination_node_list = test_dict['destination_node_list']
+    start_time = test_dict['start_time']
 
-    queue.appendleft(start_node)
-
+    path_cost = start_time - 1
+    queue.appendleft(source_node)
+    visited_list.append(source_node)
     while queue:
         current_node = queue.popleft()
         path_cost += 1
-        visited_list.append(current_node)
 
         if current_node in destination_node_list:
             return current_node, path_cost
@@ -51,12 +54,12 @@ def perform_bfs():
             for node in adjacency_dict[current_node]:
                 if node not in visited_list:
                     queue.append(node)
-
+                    visited_list.append(node)
     # program reached here means parsing is over and none of the goal states are reached
     return None, -1
 
 def perform_ucs():
-    #todo: what if teh total cost of two paths become same
+    #todo: what if the total cost of two paths become same
     pass
 
 def read_file(file_obj):
@@ -82,13 +85,12 @@ def read_file(file_obj):
 
                 start_node_list = adjancency_dict.setdefault(start_node, [])
                 start_node_list.append(end_node)
-                #todo: check this
-                start_node_list.sort(reverse=True)
+                start_node_list.sort()
                 count -= 1
 
         start_time = int(file_obj.readline().strip())
         test_case_dict = {'method_name': method_name, 'source_node': source_node, 'destination_node_list': destination_node_list,
-                          'middle_node_list': middle_node_list, 'start_time': start_time, 'adjancency_dict': adjancency_dict
+                          'middle_node_list': middle_node_list, 'start_time': start_time, 'adjacency_dict': adjancency_dict
         }
 
         test_case_list.append(test_case_dict)
@@ -121,7 +123,7 @@ DICT_NAME_TO_FUNC = {'dfs': perform_dfs,
 if __name__=='__main__':
     file_obj = read_command_line()
     # open output file
-    output_file_obj = open("", 'w')
+    output_file_obj = open("output.txt", 'w')
 
     tests_list = read_file(file_obj)
     for test_dict in tests_list:
@@ -130,5 +132,4 @@ if __name__=='__main__':
             output_file_obj.write("None")
         else:
             output_file_obj.write("%s %s\n"%(output, time))
-
     output_file_obj.close()
