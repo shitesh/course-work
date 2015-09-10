@@ -1,8 +1,9 @@
 import argparse
 import os
 from collections import deque
+from heapq import heappush, heappop
 
-class BFSPriorityQueue(object):
+class UCSPriorityQueue(object):
     def __init__(self):
         self.node_dict = {}
         self.cost_dict = {}
@@ -14,8 +15,7 @@ class BFSPriorityQueue(object):
             self.cost_dict[path_cost].sort()
         else:
             self.cost_dict[path_cost] = [node_name]
-            self.cost_list.append(path_cost)
-            self.cost_list.sort()
+            heappush(self.cost_list, path_cost)
 
     def insert(self, node_name, path_cost):
         if node_name in self.node_dict:
@@ -40,19 +40,18 @@ class BFSPriorityQueue(object):
 
     def pop_next(self):
         if self.cost_list:
-            cost = self.cost_list[0]
+            cost = heappop(self.cost_list)
             node_name_list = self.cost_dict.get(cost)
             node_name = node_name_list[0]
             del(self.node_dict[node_name])
             del(node_name_list[0])
 
             if node_name_list:
+                heappush(self.cost_list, cost)
                 self.cost_dict[cost] = node_name_list
             else:
-                del(self.cost_list[0])
                 del(self.cost_dict[cost])
             return node_name
-
         return None
 
 def perform_ucs():
