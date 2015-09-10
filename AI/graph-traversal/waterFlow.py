@@ -28,7 +28,7 @@ class UCSPriorityQueue(object):
 
                 # remove node name from current cost value in cost_list
                 node_list = self.cost_dict[current_cost]
-                node_list.delete(node_name)
+                node_list.remove(node_name)
                 if not node_list:
                     del(self.cost_dict[current_cost])
                     self.cost_list.remove(current_cost)
@@ -51,12 +51,48 @@ class UCSPriorityQueue(object):
                 self.cost_dict[cost] = node_name_list
             else:
                 del(self.cost_dict[cost])
-            return node_name
-        return None
+            return node_name, cost
+        return None, 0
 
-def perform_ucs():
+    def has_elements(self):
+        if self.cost_list:
+            return True
+        return False
+
+
+def is_pipe_open(time, off_time_list):
+    for time_range in off_time_list:
+        if time_range[0] <= time <= time_range[1]:
+            return False
+    return True
+
+
+def perform_ucs(test_dict):
     #todo: what if the total cost of two paths become same
-    pass
+    priority_queue = UCSPriorityQueue()
+    explored_list = []
+
+    source_node = test_dict['source_node']
+    adjacency_dict = test_dict['adjacency_dict']
+    destination_node_list = test_dict['destination_node_list']
+    start_time = test_dict['start_time']
+    off_period_dict = test_dict['off_period_dict']
+
+    priority_queue.insert(source_node, start_time)
+
+    while priority_queue.has_elements():
+        current_node, current_path_cost = priority_queue.pop_next()
+        explored_list.append(current_node)
+        if current_node in destination_node_list:
+            return current_node, current_path_cost
+
+        if current_node in adjacency_dict:
+            for node, path_cost in adjacency_dict[current_node]:
+                off_period_list = off_period_dict[(current_node, node)]
+                if is_pipe_open(current_path_cost, off_period_list):
+                    if node not in explored_list:
+                        priority_queue.insert(node, current_path_cost + path_cost)
+    return None, -1
 
 def perform_dfs(test_dict):
     stack = deque([])
