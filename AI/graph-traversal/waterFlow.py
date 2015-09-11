@@ -243,7 +243,7 @@ if __name__=='__main__':
     for test_dict in tests_list:
         output, time = DICT_NAME_TO_FUNC[test_dict["method_name"]](test_dict)
         if not output:
-            output_file_obj.write("None")
+            output_file_obj.write("None\n")
         else:
             output_file_obj.write("%s %s\n"%(output, time))
     output_file_obj.close()
