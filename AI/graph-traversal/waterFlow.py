@@ -103,27 +103,25 @@ def perform_dfs(test_dict):
     destination_node_list = test_dict['destination_node_list']
     start_time = test_dict['start_time']
 
-    path_cost = start_time - 1
-    stack.appendleft(source_node)
+    stack.appendleft((source_node, start_time))
     visited_list.append(source_node)
 
     while stack:
-        current_node = stack.popleft()
-        path_cost += 1
+        current_node, path_cost = stack.popleft()
 
         if current_node in destination_node_list:
             return current_node, path_cost
 
         if current_node in adjacency_dict:
+            path_cost += 1
             for node in adjacency_dict[current_node]:
                 if node not in visited_list:
-                    stack.appendleft(node)
+                    stack.appendleft((node, path_cost))
                     visited_list.append(node)
     # program reached here means parsing is over and none of the goal states are reached
     return None, -1
 
 def perform_bfs(test_dict):
-    #todo: not maintaining an explored set as it is not required in this case. check on this.
     queue = deque([])
     visited_list = []
 
@@ -132,20 +130,19 @@ def perform_bfs(test_dict):
     destination_node_list = test_dict['destination_node_list']
     start_time = test_dict['start_time']
 
-    path_cost = start_time - 1
-    queue.appendleft(source_node)
+    queue.appendleft((source_node, start_time))
     visited_list.append(source_node)
     while queue:
-        current_node = queue.popleft()
-        path_cost += 1
+        current_node, path_cost = queue.popleft()
 
         if current_node in destination_node_list:
             return current_node, path_cost
 
         if current_node in adjacency_dict:
+            path_cost += 1
             for node in adjacency_dict[current_node]:
                 if node not in visited_list:
-                    queue.append(node)
+                    queue.append((node, path_cost))
                     visited_list.append(node)
     # program reached here means parsing is over and none of the goal states are reached
     return None, -1
@@ -202,6 +199,7 @@ def read_file(file_obj):
 
 
         start_time = int(file_obj.readline().strip())
+        start_time %= 24
         test_case_dict = {'method_name': method_name, 'source_node': source_node, 'destination_node_list': destination_node_list,
                           'middle_node_list': middle_node_list, 'start_time': start_time, 'adjacency_dict': adjacency_dict,
                           'off_period_dict': off_period_dict
@@ -242,6 +240,7 @@ if __name__=='__main__':
     tests_list = read_file(file_obj)
     for test_dict in tests_list:
         output, time = DICT_NAME_TO_FUNC[test_dict["method_name"]](test_dict)
+        time %= 24
         if not output:
             output_file_obj.write("None\n")
         else:
