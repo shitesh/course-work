@@ -61,6 +61,8 @@ class UCSPriorityQueue(object):
 
 
 def is_pipe_open(time, off_time_list):
+    #todo: revisit this and check if it covers the cases
+    time %= 24
     for time_range in off_time_list:
         if time_range[0] <= time <= time_range[1]:
             return False
@@ -68,7 +70,6 @@ def is_pipe_open(time, off_time_list):
 
 
 def perform_ucs(test_dict):
-    #todo: what if the total cost of two paths become same
     priority_queue = UCSPriorityQueue()
     explored_list = []
 
@@ -104,11 +105,13 @@ def perform_dfs(test_dict):
     start_time = test_dict['start_time']
 
     stack.appendleft((source_node, start_time))
-    visited_list.append(source_node)
 
     while stack:
         current_node, path_cost = stack.popleft()
+        if current_node in visited_list:
+            continue
 
+        visited_list.append(source_node)
         if current_node in destination_node_list:
             return current_node, path_cost
 
@@ -117,7 +120,6 @@ def perform_dfs(test_dict):
             for node in adjacency_dict[current_node]:
                 if node not in visited_list:
                     stack.appendleft((node, path_cost))
-                    visited_list.append(node)
     # program reached here means parsing is over and none of the goal states are reached
     return None, -1
 
