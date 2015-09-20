@@ -31,7 +31,6 @@ class UCSPriorityQueue(object):
                 node_list.remove(node_name)
                 if not node_list:
                     del(self.cost_dict[current_cost])
-                    self.cost_list.remove(current_cost)
                 else:
                     self.cost_dict[current_cost] = node_list
         else:
@@ -39,9 +38,12 @@ class UCSPriorityQueue(object):
             self.update_costs(node_name, path_cost)
 
     def pop_next(self):
-        if self.cost_list:
+        while self.cost_list:
             cost = heappop(self.cost_list)
             node_name_list = self.cost_dict.get(cost)
+            if not node_name_list:
+                continue
+
             node_name = node_name_list[0]
             del(self.node_dict[node_name])
             del(node_name_list[0])
