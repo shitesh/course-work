@@ -1,59 +1,31 @@
 import argparse
 import os
 from collections import deque
-from heapq import heappush, heappop
+from heapq import heappush, heappop, heapify
 
 class UCSPriorityQueue(object):
     def __init__(self):
         self.node_dict = {}
-        self.cost_dict = {}
         self.cost_list = []
 
-    def update_costs(self, node_name, path_cost):
-        if path_cost in self.cost_dict:
-            self.cost_dict[path_cost].append(node_name)
-            self.cost_dict[path_cost].sort()
-        else:
-            self.cost_dict[path_cost] = [node_name]
-            heappush(self.cost_list, path_cost)
+    def rebuild_heap(self):
+        self.cost_list = [(value, key) for key, value in self.node_dict.iteritems()]
+        heapify(self.cost_list)
 
     def insert(self, node_name, path_cost):
         if node_name in self.node_dict:
             current_cost = self.node_dict[node_name]
             if path_cost < current_cost:
                 self.node_dict[node_name] = path_cost
-
-                #update cost_dict and cost list with latest path costs
-                self.update_costs(node_name, path_cost)
-
-                # remove node name from current cost value in cost_list
-                node_list = self.cost_dict[current_cost]
-                node_list.remove(node_name)
-                if not node_list:
-                    del(self.cost_dict[current_cost])
-                else:
-                    self.cost_dict[current_cost] = node_list
+                self.rebuild_heap()
         else:
             self.node_dict[node_name] = path_cost
-            self.update_costs(node_name, path_cost)
+            heappush(self.cost_list, (path_cost, node_name))
 
     def pop_next(self):
-        while self.cost_list:
-            cost = heappop(self.cost_list)
-            node_name_list = self.cost_dict.get(cost)
-            if not node_name_list:
-                continue
-
-            node_name = node_name_list[0]
-            del(self.node_dict[node_name])
-            del(node_name_list[0])
-
-            if node_name_list:
-                heappush(self.cost_list, cost)
-                self.cost_dict[cost] = node_name_list
-            else:
-                del(self.cost_dict[cost])
-            return node_name, cost
+        if self.cost_list:
+            path_cost, node_name = heappop(self.cost_list)
+            return node_name, path_cost
         return None, 0
 
     def has_elements(self):
