@@ -35,7 +35,6 @@ class UCSPriorityQueue(object):
 
 
 def is_pipe_open(time, off_time_list):
-    #todo: revisit this and check if it covers the cases
     time %= 24
     for time_range in off_time_list:
         if time_range[0] <= time <= time_range[1]:
@@ -85,7 +84,7 @@ def perform_dfs(test_dict):
         if current_node in visited_list:
             continue
 
-        visited_list.append(source_node)
+        visited_list.append(current_node)
         if current_node in destination_node_list:
             return current_node, path_cost
 
