@@ -13,19 +13,25 @@ class UCSPriorityQueue(object):
         heapify(self.cost_list)
 
     def insert(self, node_name, path_cost):
+        # although updating priorities and recreating heap makes more logical sense, but when number of nodes is high
+        # ~1 million, it takes long time because of O(n) to rebuild heap. Hence, having duplicates and handling it in
+        #pop function makes the process fast.
         if node_name in self.node_dict:
             current_cost = self.node_dict[node_name]
             if path_cost < current_cost:
                 self.node_dict[node_name] = path_cost
-                self.rebuild_heap()
+                heappush(self.cost_list, (path_cost, node_name))
         else:
             self.node_dict[node_name] = path_cost
             heappush(self.cost_list, (path_cost, node_name))
 
     def pop_next(self):
-        if self.cost_list:
+        while self.cost_list:
             path_cost, node_name = heappop(self.cost_list)
+            if self.node_dict[node_name]!= path_cost:
+                continue
             return node_name, path_cost
+
         return None, 0
 
     def has_elements(self):
