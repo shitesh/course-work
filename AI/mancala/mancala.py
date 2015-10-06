@@ -5,8 +5,48 @@
 import argparse
 import os
 
+class BoardGame(object):
+    def __init__(self, player_1_list, player_2_list, player_1_mancala, player_2_mancala):
+        self.cost_list = []
+        self.cost_list.extend(player_1_list)
+        self.cost_list.append(player_1_mancala)
+        self.cost_list.extend(player_2_list)
+        self.cost_list.append(player_2_mancala)
+
+        self.num_pits = len(player_1_list)
+
 def read_file(file_obj):
+    method_num = int(file_obj.readline().strip())
+    player_num = int(file_obj.readline().strip())
+    cutoff_depth = int(file_obj.readline().strip())
+
+    player_2_list = [int(i) for i in file_obj.readline().strip().split(' ')]
+    player_1_list = [int(i) for i in file_obj.readline().strip().split(' ')]
+
+    player_2_mancala = int(file_obj.readline().strip())
+    player_1_mancala = int(file_obj.readline().strip())
+
+    obj = BoardGame(player_1_list, player_2_list, player_1_mancala, player_2_mancala)
+
+    return method_num, player_num, cutoff_depth, obj
+
+def perform_greedy(board_obj, player_num, cutoff_depth=1):
     pass
+
+def perform_minimax(board_obj, player_num, cutoff_depth=1):
+    pass
+
+def perform_alpha_beta(board_obj, player_num, cutoff_depth=1):
+    pass
+
+def this_is_sparta(board_obj, player_num, cutoff_depth=1):
+    pass
+
+DICT_NUM_TO_TASK = { 1: perform_greedy,
+                     2: perform_minimax,
+                     3: perform_alpha_beta,
+                     4: this_is_sparta
+}
 
 def is_valid_file(parser, arg):
     if not os.path.exists(arg):
@@ -23,4 +63,10 @@ def read_command_line():
 
 if __name__=='__main__':
     file_obj = read_command_line()
+    method_name, player_num, cutoff_depth, obj = read_file(file_obj)
+
+    DICT_NUM_TO_TASK[method_name](obj, player_num, cutoff_depth)
+
+
+    #todo: has to go in that method implementation
     output_file = open('output.txt', 'w')
