@@ -37,43 +37,13 @@ class BoardGame(object):
 
         return board_state
 
-    def player_1_turn(self, start_index):
-        player_1_mancala_index = self.num_pits
-        num_coins = self.board_list[start_index]
-        if not num_coins:
-            return False
-
-        self.board_list[start_index] = 0
-        start_index += 1
-        end_index = len(self.board_list)-1
-
-        last_index = start_index
-        while num_coins > 0:
-            for index in xrange(start_index, end_index):
-                self.board_list[index] += 1
-                num_coins -= 1
-                if num_coins == 0:
-                    last_index = index
-                    break
-            start_index = 0
-
-        extra_move = False
-        if last_index == player_1_mancala_index:
-            extra_move = True
-
-        # case where the pit in which last coin went is empty and opposite to last index is not
-        else:
-            upper_index = 2 * self.get_num_pits() - last_index
-            if last_index < player_1_mancala_index and self.board_list[last_index] == 1 and self.board_list[upper_index] != 0:
-                coins_added = 1 + self.board_list[upper_index]
-                self.board_list[last_index] = 0
-                self.board_list[upper_index] = 0
-                self.board_list[player_1_mancala_index] += coins_added
-
-        return extra_move
-
-    def player_2_turn(self, start_index):
-        player_1_mancala_index = self.num_pits
+    def next_turn(self, player_num, start_index):
+        if player_num == 1:
+            mancala_index = self.num_pits
+            skip_index = len(self.board_list) - 1
+        elif player_num == 2:
+            mancala_index = len(self.board_list) - 1
+            skip_index = self.num_pits
 
         num_coins = self.board_list[start_index]
         if not num_coins:
@@ -84,7 +54,7 @@ class BoardGame(object):
         last_index = len(self.board_list)
         while num_coins > 0:
             for index in xrange(start_index,last_index):
-                if index == player_1_mancala_index:
+                if index == skip_index:
                     continue
                 self.board_list[index] += 1
                 num_coins -= 1
@@ -94,16 +64,18 @@ class BoardGame(object):
             start_index = 0
 
         extra_move = False
-        if last_index == len(self.board_list) - 1:
+        if last_index == mancala_index:
             extra_move = True
-        else:
-            lower_index = 2* self.get_num_pits() - last_index
-            if last_index > self.num_pits + 1 and self.board_list[last_index] == 1 and self.board_list[lower_index] != 0:
-                coins_added = self.board_list[lower_index] + 1
-                self.board_list[last_index] = 0
-                self.board_list[lower_index] = 0
-                self.board_list[-1] += coins_added
 
+        else:
+            other_index = 2* self.get_num_pits() - last_index
+
+            if (player_num == 1 and last_index < mancala_index) or(player_num == 2 and last_index > skip_index+1):
+                if self.board_list[last_index] == 1 and self.board_list[other_index] != 0:
+                    coins_added = self.board_list[other_index] + 1
+                    self.board_list[last_index] = 0
+                    self.board_list[other_index] = 0
+                    self.board_list[mancala_index] += coins_added
         return extra_move
 
 def check_player1_best_move(board_obj):
@@ -111,7 +83,7 @@ def check_player1_best_move(board_obj):
     max_eval_obj = board_obj
     for index in xrange(0, num_pits):
         board_obj_copy = copy.deepcopy(board_obj)
-        extra_move = board_obj_copy.player_1_turn(index)
+        extra_move = board_obj_copy.next_turn(1, index)
         if extra_move:
             max_eval_obj = check_player1_best_move(board_obj_copy)
 
@@ -124,9 +96,9 @@ def check_player2_best_move(board_obj):
     num_pits = board_obj.get_num_pits()
     max_eval_obj = board_obj
 
-    for index in xrange(num_pits+1, 2*num_pits+1):
+    for index in xrange(2*num_pits, num_pits, -1):
         board_obj_copy = copy.deepcopy(board_obj)
-        extra_move = board_obj_copy.player_2_turn(index)
+        extra_move = board_obj_copy.next_turn(2, index)
         if extra_move:
             max_eval_obj = check_player2_best_move(board_obj_copy)
 
