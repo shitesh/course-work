@@ -29,6 +29,20 @@ class BoardGame(object):
     def get_player_2_eval_score(self):
         return self.board_list[-1] - self.board_list[self.num_pits]
 
+    def is_game_over(self):
+        player_1_coin_sum = sum(self.board_list[: self.num_pits])
+        player_2_coin_sum = sum(self.board_list[self.num_pits+1: -1])
+
+        if not player_1_coin_sum or not player_2_coin_sum:
+            self.board_list[-1] += player_2_coin_sum
+            self.board_list[self.num_pits] += player_1_coin_sum
+            for i in xrange(0, len(self.board_list)-1):
+                if i == self.num_pits:
+                    continue
+                self.board_list[i] = 0
+            return True
+        return False
+
     def get_board_state(self):
         board_state = '%s\n' %(' '.join(str(x) for x in self.board_list[-2:self.num_pits:-1]))
         board_state = '%s%s\n' %(board_state, ' '.join(str(x) for x in self.board_list[:self.num_pits]))
@@ -38,6 +52,7 @@ class BoardGame(object):
         return board_state
 
     def next_turn(self, player_num, start_index):
+        pit_empty = True
         if player_num == 1:
             mancala_index = self.num_pits
             skip_index = len(self.board_list) - 1
@@ -47,8 +62,9 @@ class BoardGame(object):
 
         num_coins = self.board_list[start_index]
         if not num_coins:
-            return False
+            return False, pit_empty
 
+        pit_empty = False
         self.board_list[start_index] = 0
         start_index += 1
         last_index = len(self.board_list)
@@ -76,16 +92,22 @@ class BoardGame(object):
                     self.board_list[last_index] = 0
                     self.board_list[other_index] = 0
                     self.board_list[mancala_index] += coins_added
-        return extra_move
+        return extra_move, pit_empty
 
 def check_player1_best_move(board_obj):
+    first_run = True
     num_pits = board_obj.get_num_pits()
     max_eval_obj = board_obj
+
     for index in xrange(0, num_pits):
         board_obj_copy = copy.deepcopy(board_obj)
-        extra_move = board_obj_copy.next_turn(1, index)
+        extra_move, pit_empty = board_obj_copy.next_turn(1, index)
         if extra_move:
             max_eval_obj = check_player1_best_move(board_obj_copy)
+        else:
+            if first_run and not pit_empty:
+                first_run = False
+                max_eval_obj = board_obj_copy
 
         if board_obj_copy.get_player_1_eval_score() > max_eval_obj.get_player_1_eval_score():
             max_eval_obj = board_obj_copy
@@ -93,14 +115,19 @@ def check_player1_best_move(board_obj):
     return max_eval_obj
 
 def check_player2_best_move(board_obj):
+    first_run = True
     num_pits = board_obj.get_num_pits()
     max_eval_obj = board_obj
 
     for index in xrange(2*num_pits, num_pits, -1):
         board_obj_copy = copy.deepcopy(board_obj)
-        extra_move = board_obj_copy.next_turn(2, index)
+        extra_move, pit_empty = board_obj_copy.next_turn(2, index)
         if extra_move:
             max_eval_obj = check_player2_best_move(board_obj_copy)
+        else:
+            if first_run and not pit_empty:
+                first_run = False
+                max_eval_obj = board_obj_copy
 
         if board_obj_copy.get_player_2_eval_score() > max_eval_obj.get_player_2_eval_score():
             max_eval_obj = board_obj_copy
