@@ -93,7 +93,7 @@ class BoardGame(object):
                     self.board_list[mancala_index] += coins_added
         return extra_move, pit_empty
 
-def check_player1_best_move(board_obj, count=1):
+def check_player1_best_move(board_obj):
     first_run = True
     num_pits = board_obj.get_num_pits()
     max_eval_obj = board_obj
@@ -106,7 +106,7 @@ def check_player1_best_move(board_obj, count=1):
 
         if not pit_empty:
             if extra_move:
-                board_obj_copy = check_player1_best_move(board_obj_copy, count+1)
+                board_obj_copy = check_player1_best_move(board_obj_copy)
             if first_run:
                 first_run = False
                 max_eval_obj = board_obj_copy
