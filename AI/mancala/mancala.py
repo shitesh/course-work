@@ -6,6 +6,7 @@ import argparse
 import copy
 import os
 
+DICT_ID_NAME = {0: 'B2', 1:'B3', 2:'B4', 6:'A2', 5:'A3', 4:'A2'}
 class BoardGame(object):
     def __init__(self, player_1_list, player_2_list, player_1_mancala, player_2_mancala):
         self.board_list = []
@@ -28,6 +29,18 @@ class BoardGame(object):
 
     def get_player_2_eval_score(self):
         return self.board_list[-1] - self.board_list[self.num_pits]
+
+    def get_player_range(self, player_num):
+        if player_num == 1:
+            return 0, self.num_pits, 1, 2
+        elif player_num == 2:
+            return 2 * self.num_pits, self.num_pits, -1, 1
+
+    def get_player_reversed_range(self, player_num):
+        if player_num == 1:
+            return 2 * self.num_pits, self.num_pits, -1, 2
+        elif player_num == 2:
+            return 0, self.num_pits, 1, 1
 
     def is_game_over(self):
         player_1_coin_sum = sum(self.board_list[: self.num_pits])
@@ -149,8 +162,73 @@ def perform_greedy(board_obj, player_num, cutoff_depth=1):
     output_file.write('%s' % (max_board_obj.get_board_state()))
     output_file.close()
 
-def perform_minimax(board_obj, player_num, cutoff_depth=1):
-    pass
+def get_all_board_states(board_obj, board_list, player_num):
+    start_index, end_index, reverse, other_player = board_obj.get_player_range(player_num)
+    for index in xrange(start_index, end_index, reverse):
+        board_obj_copy = copy.deepcopy(board_obj)
+        next_move, pit_empty = board_obj_copy.next_turn(player_num, index)
+        if not pit_empty:
+            if next_move:
+                get_all_board_states(board_obj_copy, board_list, player_num)
+            else:
+                board_list.append(board_obj_copy)
+
+def max_play(board_obj, current_depth, cutoff_depth, player_num):
+    board_list = []
+    output_list = []
+    output_value_list = []
+
+    get_all_board_states(board_obj, board_list, player_num)
+    if current_depth == cutoff_depth:
+        for board_obj in board_list:
+            output_list.append(board_obj)
+            output_value_list.append(board_obj.get_player_2_eval_score())
+        return output_list, output_value_list
+
+
+    start_index, end_index, reverse, other_player = board_obj.get_player_range(player_num)
+
+    for board_obj in board_list:
+        child_list, child_values = min_play(board_obj, current_depth+1, cutoff_depth, other_player)
+        max_value = max(child_values)
+        output_list.append(board_obj)
+        output_value_list.append(max_value)
+
+    return output_list, output_value_list
+
+def min_play(board_obj, current_depth, cutoff_depth, player_num):
+    board_obj_list = []
+    output_list = []
+    output_value_list = []
+
+    get_all_board_states(board_obj, board_obj_list, player_num)
+    if current_depth == cutoff_depth:
+        for board_obj in board_obj_list:
+            output_list.append(board_obj)
+            output_value_list.append(board_obj.get_player_2_eval_score())
+        return output_list, output_value_list
+
+    start_index, end_index, reverse, other_player = board_obj.get_player_range(player_num)
+    for board_obj in board_obj_list:
+        child_list, child_values = max_play(board_obj, current_depth+1, cutoff_depth, other_player)
+        min_value = min(child_values)
+        output_list.append(board_obj)
+        output_value_list.append(min_value)
+
+    return output_list, output_value_list
+
+def perform_minimax(board_obj, player_num, cutoff_depth=1, current_depth=0):
+    level_1_list, level_1_value = min_play(board_obj, current_depth+1, cutoff_depth, player_num)
+    max_score = -10000
+    max_obj = None
+    for i in xrange(0, len(level_1_list)):
+        if level_1_value[i] > max_score:
+            max_score = level_1_value[i]
+            max_obj = level_1_list[i]
+
+    print max_obj.get_board_state()
+    print max_score
+
 
 def perform_alpha_beta(board_obj, player_num, cutoff_depth=1):
     pass
@@ -194,5 +272,7 @@ def read_command_line():
 
 if __name__=='__main__':
     file_obj = read_command_line()
+    log_file = open('traverse_log.txt', 'w')
+    output_file = open('next_state_minimax.txt', 'w')
     method_name, player_num, cutoff_depth, obj = read_file(file_obj)
     DICT_NUM_TO_TASK[method_name](obj, player_num, cutoff_depth)
