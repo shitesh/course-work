@@ -1,7 +1,4 @@
-import argparse
 import copy
-import os
-from mancala import BoardGame
 from collections import deque
 
 MIN_DEFAULT_VALUE = 10000
@@ -23,8 +20,13 @@ class Node(object):
         self.children_list = children_list
         self.best_state = None
 
-    def get_debug(self):
-        return '%s,%s,%s' %(self.name, self.depth, self.value)
+    def get_log(self):
+        value = self.value
+        if self.value == MAX_DEFAULT_VALUE:
+            value = '-Infinity'
+        elif self.value == MIN_DEFAULT_VALUE:
+            value = 'Infinity'
+        return '%s,%s,%s\n' %(self.name, self.depth, value)
 
     def get_name(self):
         return self.name
@@ -80,12 +82,17 @@ class Node(object):
     def set_best_state(self, best_state):
         self.best_state = best_state
 
-def perform_minimax(board_obj, player_num, cutoff_depth, current_depth=0):
+def perform_minimax(board_obj, player_num, cutoff_depth):
+    output_file = open('next_state.txt', 'w')
+    log_file = open('traverse_log.txt', 'w')
+
+    log_file.write('Node,Depth,Value\n')
+    log_file.write('root,0,-Infinity\n')
+
     name = 'root'
     value = MAX_DEFAULT_VALUE
     dict_index_name = board_obj.get_index_name()
     dict_opposite_method = {'min': 'max', 'max': 'min'}
-    dict_opposite_val = {MIN_DEFAULT_VALUE: MAX_DEFAULT_VALUE, MAX_DEFAULT_VALUE: MIN_DEFAULT_VALUE}
 
     main_player = player_num
     start_index, end_index, reverse, other_player = board_obj.get_player_range(player_num)
@@ -143,7 +150,7 @@ def perform_minimax(board_obj, player_num, cutoff_depth, current_depth=0):
             current_node_copy.set_value(value)
             current_node_copy.set_next_move(next_move)
             current_node_copy.set_player_num(player_num)
-            print current_node_copy.get_debug()
+            log_file.write(current_node_copy.get_log())
             stack.appendleft(current_node_copy)
         else:
             if stack:
@@ -166,44 +173,10 @@ def perform_minimax(board_obj, player_num, cutoff_depth, current_depth=0):
                             parent_node.set_best_state(parent_node.get_board())
 
                 stack.appendleft(parent_node)
-                print parent_node.get_debug()
+                log_file.write(parent_node.get_log())
             else:
                 break
 
-    print root_node.get_best_state().get_board_state()
-
-
-def read_file(file_obj):
-    method_num = int(file_obj.readline().strip())
-    player_num = int(file_obj.readline().strip())
-    cutoff_depth = int(file_obj.readline().strip())
-
-    player_2_list = [int(i) for i in file_obj.readline().strip().split(' ')]
-    player_1_list = [int(i) for i in file_obj.readline().strip().split(' ')]
-
-    player_2_mancala = int(file_obj.readline().strip())
-    player_1_mancala = int(file_obj.readline().strip())
-
-    obj = BoardGame(player_1_list, player_2_list, player_1_mancala, player_2_mancala)
-
-    return method_num, player_num, cutoff_depth, obj
-
-def is_valid_file(parser, arg):
-    if not os.path.exists(arg):
-        raise parser.error("Given file doesn't exist")
-    else:
-        return open(arg, 'r')
-
-def read_command_line():
-    parser = argparse.ArgumentParser("ManCala Game")
-    parser.add_argument("-i", dest="input_file", required=True, help="input file with required details",
-                        type=lambda x: is_valid_file(parser, x))
-    arguments = parser.parse_args()
-    return arguments.input_file
-
-if __name__=='__main__':
-    file_obj = read_command_line()
-    log_file = open('traverse_log.txt', 'w')
-    output_file = open('next_state_minimax.txt', 'w')
-    method_name, player_num, cutoff_depth, obj = read_file(file_obj)
-    perform_minimax(obj, player_num, cutoff_depth)
+    output_file.write(root_node.get_best_state().get_board_state())
+    output_file.close()
+    log_file.close()
