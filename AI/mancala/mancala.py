@@ -10,7 +10,7 @@ DICT_ID_NAME = {0: 'B2', 1:'B3', 2:'B4', 6:'A2', 5:'A3', 4:'A2'}
 class BoardGame(object):
     def __init__(self, player_1_list, player_2_list, player_1_mancala, player_2_mancala):
         self.board_list = []
-
+        self.index_name = {}
         self.board_list.extend(player_1_list)
         self.board_list.append(player_1_mancala)
         self.board_list.extend(player_2_list[::-1])
@@ -18,11 +18,23 @@ class BoardGame(object):
 
         self.num_pits = len(player_1_list)
 
+        for index in xrange(0,self.num_pits):
+            self.index_name[index] = 'B%s'%(index+2)
+
+        for index in xrange(2 * self.num_pits, self.num_pits, -1):
+            self.index_name[index] = 'A%s'%(len(self.board_list) - index)
+
+    def get_index_name(self):
+        return self.index_name
+
     def get_num_pits(self):
         return self.num_pits
 
     def get_board_list(self):
         return self.board_list
+
+    def get_value_at_index(self, index):
+        return self.board_list[index]
 
     def get_player_1_eval_score(self):
         return self.board_list[self.num_pits] - self.board_list[-1]
@@ -35,6 +47,12 @@ class BoardGame(object):
             return 0, self.num_pits, 1, 2
         elif player_num == 2:
             return 2 * self.num_pits, self.num_pits, -1, 1
+
+    def get_eval_score(self, player_num):
+        if player_num == 1:
+            return self.get_player_1_eval_score()
+        elif player_num == 2:
+            return self.get_player_2_eval_score()
 
     def get_player_reversed_range(self, player_num):
         if player_num == 1:
@@ -173,7 +191,7 @@ def get_all_board_states(board_obj, board_list, player_num):
             else:
                 board_list.append(board_obj_copy)
 
-def max_play(board_obj, current_depth, cutoff_depth, player_num):
+def max_play(board_obj, current_depth, cutoff_depth, current_player, player_num):
     board_list = []
     output_list = []
     output_value_list = []
@@ -182,21 +200,21 @@ def max_play(board_obj, current_depth, cutoff_depth, player_num):
     if current_depth == cutoff_depth:
         for board_obj in board_list:
             output_list.append(board_obj)
-            output_value_list.append(board_obj.get_player_2_eval_score())
+            output_value_list.append(board_obj.get_eval_score(current_player))
         return output_list, output_value_list
 
 
     start_index, end_index, reverse, other_player = board_obj.get_player_range(player_num)
 
     for board_obj in board_list:
-        child_list, child_values = min_play(board_obj, current_depth+1, cutoff_depth, other_player)
+        child_list, child_values = min_play(board_obj, current_depth+1, cutoff_depth, current_player, other_player)
         max_value = max(child_values)
         output_list.append(board_obj)
         output_value_list.append(max_value)
 
     return output_list, output_value_list
 
-def min_play(board_obj, current_depth, cutoff_depth, player_num):
+def min_play(board_obj, current_depth, cutoff_depth, current_player, player_num):
     board_obj_list = []
     output_list = []
     output_value_list = []
@@ -205,12 +223,12 @@ def min_play(board_obj, current_depth, cutoff_depth, player_num):
     if current_depth == cutoff_depth:
         for board_obj in board_obj_list:
             output_list.append(board_obj)
-            output_value_list.append(board_obj.get_player_2_eval_score())
+            output_value_list.append(board_obj.get_eval_score(current_player))
         return output_list, output_value_list
 
     start_index, end_index, reverse, other_player = board_obj.get_player_range(player_num)
     for board_obj in board_obj_list:
-        child_list, child_values = max_play(board_obj, current_depth+1, cutoff_depth, other_player)
+        child_list, child_values = max_play(board_obj, current_depth+1, cutoff_depth, current_player, other_player)
         min_value = min(child_values)
         output_list.append(board_obj)
         output_value_list.append(min_value)
@@ -218,10 +236,13 @@ def min_play(board_obj, current_depth, cutoff_depth, player_num):
     return output_list, output_value_list
 
 def perform_minimax(board_obj, player_num, cutoff_depth=1, current_depth=0):
-    level_1_list, level_1_value = min_play(board_obj, current_depth+1, cutoff_depth, player_num)
+    level_1_list, level_1_value = min_play(board_obj, current_depth+1, cutoff_depth, player_num, player_num)
+
     max_score = -10000
     max_obj = None
     for i in xrange(0, len(level_1_list)):
+        print level_1_list[i].get_board_state()
+        print level_1_value[i]
         if level_1_value[i] > max_score:
             max_score = level_1_value[i]
             max_obj = level_1_list[i]
