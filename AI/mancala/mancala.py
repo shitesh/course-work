@@ -6,8 +6,7 @@ import argparse
 import copy
 import os
 from minimax import perform_minimax
-
-
+from alpha_beta import perform_alpha_beta
 
 class BoardGame(object):
     def __init__(self, player_1_list, player_2_list, player_1_mancala, player_2_mancala):
@@ -182,9 +181,6 @@ def perform_greedy(board_obj, player_num, cutoff_depth=1):
 
     output_file.write('%s' % (max_board_obj.get_board_state()))
     output_file.close()
-
-def perform_alpha_beta(board_obj, player_num, cutoff_depth=1):
-    pass
 
 def competition(board_obj, player_num, cutoff_depth=1):
     pass
