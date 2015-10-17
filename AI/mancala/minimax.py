@@ -125,11 +125,11 @@ def perform_minimax(board_obj, player_num, cutoff_depth):
                 start_index, end_index, reverse, other_player = board_obj.get_player_range(current_node.get_player_num())
                 children_list = [int(i) for i in xrange(start_index, end_index, reverse)]
                 method_name = current_node.get_method_name()
-                if cutoff_depth != depth:
-                    if method_name == 'max': value = MAX_DEFAULT_VALUE
-                    if method_name == 'min': value = MIN_DEFAULT_VALUE
-                else:
-                    value = current_node_copy.get_board().get_eval_score(main_player)
+                #if cutoff_depth != depth:
+                if method_name == 'max': value = MAX_DEFAULT_VALUE
+                if method_name == 'min': value = MIN_DEFAULT_VALUE
+                #else:
+                #    value = current_node_copy.get_board().get_eval_score(main_player)
                 next_move = True
                 player_num = current_node.get_player_num()
             else:
