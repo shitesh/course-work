@@ -79,9 +79,6 @@ class Node(object):
     def set_value(self, value):
         self.value = value
 
-    def set_best_state(self, best_state):
-        self.best_state = best_state
-
 def perform_minimax(board_obj, player_num, cutoff_depth):
     output_file = open('next_state.txt', 'w')
     log_file = open('traverse_log.txt', 'w')
@@ -121,7 +118,16 @@ def perform_minimax(board_obj, player_num, cutoff_depth):
             current_node_copy.set_name(dict_index_name[child_index])
             current_node_copy.set_depth(depth)
 
-            if extra_move:
+            if current_node_copy.get_board().is_game_over():
+                value = current_node_copy.get_board().get_eval_score(main_player)
+                children_list = []
+                current_node_copy.set_children_list(children_list)
+                current_node_copy.set_value(value)
+                log_file.write(current_node_copy.get_log())
+                stack.appendleft(current_node_copy)
+                continue
+
+            elif extra_move:
                 start_index, end_index, reverse, other_player = board_obj.get_player_range(current_node.get_player_num())
                 children_list = [int(i) for i in xrange(start_index, end_index, reverse)]
                 method_name = current_node.get_method_name()
@@ -132,6 +138,7 @@ def perform_minimax(board_obj, player_num, cutoff_depth):
                 #    value = current_node_copy.get_board().get_eval_score(main_player)
                 next_move = True
                 player_num = current_node.get_player_num()
+
             else:
                 start_index, end_index, reverse, other_player = board_obj.get_player_range(DICT_OPPOSITE_PLAYER_NUM[current_node.get_player_num()])
                 children_list = [int(i) for i in xrange(start_index, end_index, reverse)] if cutoff_depth != depth else []
@@ -160,9 +167,11 @@ def perform_minimax(board_obj, player_num, cutoff_depth):
                     if parent_node.get_value() < current_node.get_value():
                         parent_node.set_value(current_node.get_value())
                         if parent_node.get_depth() == 1:
-                            parent_node.set_best_state(current_node.get_board())
+                            if current_node.get_best_state():
+                                parent_node.set_best_state(current_node.get_best_state())
+                            else:
+                                parent_node.set_best_state(current_node.get_board())
                         if parent_node.get_depth() == 0:
-
                             num_of_runs -=1
                             parent_node.set_best_state(current_node.get_best_state())
 
