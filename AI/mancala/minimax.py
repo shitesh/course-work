@@ -9,7 +9,7 @@ DICT_OPPOSITE_PLAYER_NUM = {1: 2, 2: 1}
 
 class Node(object):
 
-    def __init__(self, board_obj, player_num, method, name, value, depth, next_move, children_list):
+    def __init__(self, board_obj, player_num, method, name, value, depth, next_move, children_list, alpha=None, beta=None):
         self.board_obj = board_obj
         self.player_num = player_num
         self.method = method
@@ -19,6 +19,8 @@ class Node(object):
         self.depth = depth
         self.children_list = children_list
         self.best_state = None
+        self.alpha = alpha
+        self.beta = beta
 
     def get_log(self):
         value = self.value
@@ -27,6 +29,23 @@ class Node(object):
         elif self.value == MIN_DEFAULT_VALUE:
             value = 'Infinity'
         return '%s,%s,%s\n' %(self.name, self.depth, value)
+
+    def get_alpha_beta_log(self):
+        value = self.value
+        if self.value == MAX_DEFAULT_VALUE:
+            value = '-Infinity'
+        elif self.value == MIN_DEFAULT_VALUE:
+            value = 'Infinity'
+        alpha = self.alpha if self.alpha != MAX_DEFAULT_VALUE else '-Infinity'
+        beta = self.beta if self.beta != MIN_DEFAULT_VALUE else 'Infinity'
+
+        return '%s,%s,%s,%s,%s\n' %(self.name, self.depth, value, alpha, beta)
+
+    def get_alpha(self):
+        return self.alpha
+
+    def get_beta(self):
+        return self.beta
 
     def get_name(self):
         return self.name
@@ -54,6 +73,12 @@ class Node(object):
 
     def get_best_state(self):
         return  self.best_state
+
+    def set_alpha(self, alpha):
+        self.alpha = alpha
+
+    def set_beta(self, beta):
+        self.beta = beta
 
     def set_next_move(self, next_move):
         self.next_move = next_move
@@ -162,6 +187,8 @@ def perform_minimax(board_obj, player_num, cutoff_depth):
         else:
             if stack:
                 parent_node = stack.popleft()
+                if parent_node.get_depth() == 0:
+                    num_of_runs -=1
 
                 if parent_node.get_method_name() == 'max':
                     if parent_node.get_value() < current_node.get_value():
@@ -172,7 +199,6 @@ def perform_minimax(board_obj, player_num, cutoff_depth):
                             else:
                                 parent_node.set_best_state(current_node.get_board())
                         if parent_node.get_depth() == 0:
-                            num_of_runs -=1
                             parent_node.set_best_state(current_node.get_best_state())
 
                 if parent_node.get_method_name() == 'min':
