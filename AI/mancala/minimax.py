@@ -199,7 +199,9 @@ def perform_minimax(board_obj, player_num, cutoff_depth):
                             else:
                                 parent_node.set_best_state(current_node.get_board())
                         if parent_node.get_depth() == 0:
-                            parent_node.set_best_state(current_node.get_best_state())
+                            parent_node.set_best_state(current_node.get_board())
+                            if current_node.get_best_state():
+                                parent_node.set_best_state(current_node.get_best_state())
 
                 if parent_node.get_method_name() == 'min':
                     if parent_node.get_value() > current_node.get_value():

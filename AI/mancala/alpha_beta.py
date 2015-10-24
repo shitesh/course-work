@@ -98,7 +98,9 @@ def perform_alpha_beta(board_obj, player_num, cutoff_depth):
                             else:
                                 parent_node.set_best_state(current_node.get_board())
                         if parent_node.get_depth() == 0:
-                            parent_node.set_best_state(current_node.get_best_state())
+                            parent_node.set_best_state(current_node.get_board())
+                            if current_node.get_best_state():
+                                parent_node.set_best_state(current_node.get_best_state())
 
                     #handle the alpha case
                     if parent_node.get_value() >= parent_node.get_beta():
