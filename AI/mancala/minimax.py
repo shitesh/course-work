@@ -110,7 +110,6 @@ def perform_minimax(board_obj, player_num, cutoff_depth):
 
     log_file.write('Node,Depth,Value\n')
     log_file.write('root,0,-Infinity\n')
-
     name = 'root'
     value = MAX_DEFAULT_VALUE
     dict_index_name = board_obj.get_index_name()
@@ -140,6 +139,7 @@ def perform_minimax(board_obj, player_num, cutoff_depth):
                 continue
 
             extra_move, pit_empty = current_node_copy.get_board().next_turn(current_node.get_player_num(), child_index)
+            current_node_copy.set_best_state(None)
             current_node_copy.set_name(dict_index_name[child_index])
             current_node_copy.set_depth(depth)
 
@@ -198,6 +198,7 @@ def perform_minimax(board_obj, player_num, cutoff_depth):
                                 parent_node.set_best_state(current_node.get_best_state())
                             else:
                                 parent_node.set_best_state(current_node.get_board())
+
                         if parent_node.get_depth() == 0:
                             parent_node.set_best_state(current_node.get_board())
                             if current_node.get_best_state():
@@ -217,3 +218,4 @@ def perform_minimax(board_obj, player_num, cutoff_depth):
     output_file.write(root_node.get_best_state().get_board_state())
     output_file.close()
     log_file.close()
+

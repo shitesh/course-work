@@ -39,6 +39,7 @@ def perform_alpha_beta(board_obj, player_num, cutoff_depth):
                 continue
 
             extra_move, pit_empty = current_node_copy.get_board().next_turn(current_node.get_player_num(), child_index)
+            current_node_copy.set_best_state(None)
             current_node_copy.set_name(dict_index_name[child_index])
             current_node_copy.set_depth(depth)
 

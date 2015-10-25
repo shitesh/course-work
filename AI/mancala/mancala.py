@@ -117,7 +117,7 @@ class BoardGame(object):
         else:
             other_index = 2* self.get_num_pits() - last_index
 
-            if (player_num == 1 and last_index < mancala_index) or(player_num == 2 and last_index > skip_index+1):
+            if (player_num == 1 and last_index < mancala_index) or(player_num == 2 and last_index > skip_index):
                 #if self.board_list[last_index] == 1 and self.board_list[other_index] != 0:
                 if self.board_list[last_index] == 1:
                     coins_added = self.board_list[other_index] + 1
