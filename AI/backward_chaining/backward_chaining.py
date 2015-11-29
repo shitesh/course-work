@@ -29,8 +29,7 @@ def backward_chaining(goal_list, dict_mapping, level=0):
     if current_goal in infinite_loop_detector:
         return answers_list
 
-    print current_goal
-    if current_goal.strip() not in tautology_list:
+    if current_goal.strip() in tautology_list and current_goal.strip() not in infinite_loop_detector:
         infinite_loop_detector.append(current_goal.strip())
 
     for sentence in all_sentences:
@@ -41,7 +40,7 @@ def backward_chaining(goal_list, dict_mapping, level=0):
         if dict_mapping_copy:
             if not lhs and len(goal_list) > 0:
                 new_goals.extend(goal_list)
-                lower_level_answers = backward_chaining(copy.deepcopy(new_goals), copy.deepcopy(dict_mapping_copy),level+1)
+                lower_level_answers = backward_chaining(copy.deepcopy(new_goals), copy.deepcopy(dict_mapping_copy))
                 if not lower_level_answers:
                     new_goals = []
                 for answer in lower_level_answers:
@@ -51,7 +50,7 @@ def backward_chaining(goal_list, dict_mapping, level=0):
             else:
                 new_goals.extend(lhs)
                 new_goals.extend(goal_list)
-                lower_level_answers = backward_chaining(copy.deepcopy(new_goals), copy.deepcopy(dict_mapping_copy), level+1)
+                lower_level_answers = backward_chaining(copy.deepcopy(new_goals), copy.deepcopy(dict_mapping_copy))
                 if not lower_level_answers:
                     new_goals = []
                 for answer in lower_level_answers:
@@ -164,11 +163,6 @@ def standardize_variables(rule):
         predicates_list = all_predicate.split('^')
         cons_operator, cons_arg_list, is_negated = get_operator_parameters(consequent)
 
-    if dict_predicate_variable.has_key(cons_operator):
-        existing_mapping = dict_predicate_variable[cons_operator]
-        for i in xrange(0, len(cons_arg_list)):
-            dict_existing_mapping[cons_arg_list[i]] = existing_mapping[i]
-    
     variable_list = []
     variable_list.extend(cons_arg_list)
     for predicate in predicates_list:
@@ -179,22 +173,12 @@ def standardize_variables(rule):
     dict_mapping = {}
     for variable in variable_list:
         if is_variable(variable):
-            if dict_existing_mapping.has_key(variable):
-                print  dict_existing_mapping
-                dict_mapping[variable] = dict_existing_mapping[variable]
-            else:
-                dict_mapping[variable] = 'v%d' %(standardize_variables.counter.next())
+            dict_mapping[variable] = 'v%d' %(standardize_variables.counter.next())
         else:
             dict_mapping[variable] = variable
 
     rhs = '%s(%s)'%(cons_operator, ','.join(str(dict_mapping[variable]) for variable in cons_arg_list))
-    all_variable = True
-    for variable in cons_arg_list:
-        if not is_variable(variable):
-            all_variable = False
-    if all_variable:
-        dict_predicate_variable[cons_operator] = [dict_mapping[variable] for variable in cons_arg_list]
-    
+
     lhs = []
     for predicate in predicates_list:
         operator, arg_list, is_negated = get_operator_parameters(predicate)
@@ -221,10 +205,12 @@ if __name__ == '__main__':
         # clear predicate mapping and infinite loop list
         dict_predicate_variable.clear()
         infinite_loop_detector = []
-
-        print 'processing %s'%(query)
-        result = fol_bc_ask([query])
-        out_file.write('%s\n' %(result))
-        break
+        try:
+            print 'processing %s'%(query)
+            result = fol_bc_ask([query])
+            out_file.write('%s\n' %(result))
+        except:
+            out_file.write('FALSE\n')
+            continue
 
     out_file.close()
