@@ -3,12 +3,35 @@ import copy
 import itertools
 import re
 import os
+from collections import deque
 
 dict_KB = {}
 tautology_list = []
 query_list = []
 infinite_loop_detector = []
 dict_predicate_variable = {}
+
+def merge(dict1, dict2):
+    dict3 = {}
+
+    for key, value in dict1.iteritems():
+        dict3[key] = value
+
+    for key, value in dict2.iteritems():
+        if not dict3.has_key(key):
+            dict3[key] = value
+
+    for key, value in dict3.iteritems():
+        if is_variable(value) and dict3.has_key(value):
+            dict3[key] = dict3[value]
+
+    return dict3
+
+def check(dict1, dict2):
+    for key, value in dict1.iteritems():
+        if dict1[key] != dict2[key]:
+            print 'different'
+
 
 def backward_chaining(goal_list, dict_mapping, level=0):
     global tautology_list
@@ -29,7 +52,7 @@ def backward_chaining(goal_list, dict_mapping, level=0):
     if current_goal in infinite_loop_detector:
         return answers_list
 
-    if current_goal.strip() not in infinite_loop_detector:
+    if current_goal.strip() not in infinite_loop_detector and current_goal.strip() not in tautology_list:
         infinite_loop_detector.append(current_goal.strip())
 
     for sentence in all_sentences:
@@ -85,7 +108,6 @@ def get_operator_parameters(clause):
     operator = clause.split('(')[0]
     is_negated = False
     if operator[0] == '~':
-        #todo: do we need to do this
         is_negated = True
 
     arg_list = [arg.strip() for arg in arg_list]
@@ -116,6 +138,23 @@ def read_file(file_obj):
         clause = file_obj.readline().strip()
         process_clause(clause)
         count += 1
+
+
+    for key, value_list in dict_KB.iteritems():
+        final_list = []
+        implication_list = []
+        fact_list = []
+        for value in value_list:
+            if '=>' in value:
+                implication_list.append(value.strip())
+            else:
+                fact_list.append(value.strip())
+        if fact_list:
+            final_list.extend(fact_list)
+        if implication_list:
+            final_list.extend(implication_list)
+
+        dict_KB[key] = final_list
 
 def unify(variable, goal, dict_mapping):
     operator, variable_list1, is_negated = get_operator_parameters(variable)
