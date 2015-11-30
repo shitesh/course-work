@@ -11,29 +11,7 @@ query_list = []
 infinite_loop_detector = []
 dict_predicate_variable = {}
 
-def merge(dict1, dict2):
-    dict3 = {}
-
-    for key, value in dict1.iteritems():
-        dict3[key] = value
-
-    for key, value in dict2.iteritems():
-        if not dict3.has_key(key):
-            dict3[key] = value
-
-    for key, value in dict3.iteritems():
-        if is_variable(value) and dict3.has_key(value):
-            dict3[key] = dict3[value]
-
-    return dict3
-
-def check(dict1, dict2):
-    for key, value in dict1.iteritems():
-        if dict1[key] != dict2[key]:
-            print 'different'
-
-
-def backward_chaining(goal_list, dict_mapping, level=0):
+def backward_chaining(goal_list, dict_mapping):
     global tautology_list
     new_goals = []
     answers_list = []
@@ -192,7 +170,6 @@ def substitute(dict_substitution, clause):
 
 def standardize_variables(rule):
     global dict_predicate_variable
-    dict_existing_mapping = {}
     if '=>' not in rule:
         predicates_list = []
         cons_operator, cons_arg_list, is_negated = get_operator_parameters(rule)
@@ -216,7 +193,6 @@ def standardize_variables(rule):
             dict_mapping[variable] = variable
 
     rhs = '%s(%s)'%(cons_operator, ','.join(str(dict_mapping[variable]) for variable in cons_arg_list))
-
     lhs = []
     for predicate in predicates_list:
         operator, arg_list, is_negated = get_operator_parameters(predicate)
@@ -233,13 +209,15 @@ def fol_bc_ask(query):
     else:
         return 'FALSE'
 
-
 if __name__ == '__main__':
     file_obj = read_command_line()
     read_file(file_obj)
     out_file = open('output.txt', 'w')
     for query in query_list:
         # clear predicate mapping and infinite loop list
+        if query.strip() in tautology_list:
+            out_file.write('TRUE\n')
+            continue
         dict_predicate_variable.clear()
         infinite_loop_detector = []
         try:
