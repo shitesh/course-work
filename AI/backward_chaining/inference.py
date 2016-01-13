@@ -3,13 +3,21 @@ import copy
 import itertools
 import re
 import os
-from collections import deque
 
 dict_KB = {}
 tautology_list = []
 query_list = []
+dict_predicate_variable ={}
 infinite_loop_detector = []
-dict_predicate_variable = {}
+
+def check_all_constants(clause):
+    operator, arg_list, is_negated = get_operator_parameters(clause)
+    all_constants = True
+    for arg in arg_list:
+        if is_variable(arg):
+            all_constants = False
+            break
+    return all_constants
 
 def backward_chaining(goal_list, dict_mapping):
     global tautology_list
@@ -23,14 +31,15 @@ def backward_chaining(goal_list, dict_mapping):
     current_goal = goal_list.pop(0)
 
     current_goal = substitute(dict_mapping, current_goal)
-
     operator, arg_list, is_negated = get_operator_parameters(current_goal)
     all_sentences = dict_KB.get(operator)
-
-    if current_goal in infinite_loop_detector:
+    if not all_sentences:
         return answers_list
 
-    if current_goal.strip() not in infinite_loop_detector and current_goal.strip() not in tautology_list:
+    if current_goal.strip() in infinite_loop_detector:
+        return answers_list
+
+    if current_goal.strip() not in tautology_list:
         infinite_loop_detector.append(current_goal.strip())
 
     for sentence in all_sentences:
@@ -43,7 +52,7 @@ def backward_chaining(goal_list, dict_mapping):
                 new_goals.extend(goal_list)
                 lower_level_answers = backward_chaining(copy.deepcopy(new_goals), copy.deepcopy(dict_mapping_copy))
                 if not lower_level_answers:
-                    new_goals = []
+                    del new_goals[:]
                 for answer in lower_level_answers:
                     answers_list.append(answer)
             elif not lhs and len(goal_list) == 0:
@@ -56,8 +65,6 @@ def backward_chaining(goal_list, dict_mapping):
                     new_goals = []
                 for answer in lower_level_answers:
                     answers_list.append(answer)
-        else:
-            new_goals = []
 
     return answers_list
 
@@ -134,23 +141,42 @@ def read_file(file_obj):
 
         dict_KB[key] = final_list
 
+def unify_var(term1, term2, dict_mapping):
+    if term1 == term2:
+        return
+    elif is_variable(term1):
+        if dict_mapping.has_key(term1):
+            unify_var(dict_mapping[term1], term2, dict_mapping)
+        elif dict_mapping.has_key(term2):
+            unify_var(term1, dict_mapping[term2], dict_mapping)
+        else:
+            dict_mapping[term1] = term2
+    elif is_variable(term2):
+        if dict_mapping.has_key(term2):
+            unify_var(dict_mapping[term2], term1, dict_mapping)
+        elif dict_mapping.has_key(term1):
+            unify_var(term2, dict_mapping[term1], dict_mapping)
+        else:
+            dict_mapping[term2] = term1
+    elif term1!=term2:
+        dict_mapping.clear()
+
 def unify(variable, goal, dict_mapping):
-    operator, variable_list1, is_negated = get_operator_parameters(variable)
-    operator, variable_list2, is_negated = get_operator_parameters(goal)
+    operator1, variable_list1, is_negated = get_operator_parameters(variable)
+    operator2, variable_list2, is_negated = get_operator_parameters(goal)
+    if operator1 != operator2:
+        dict_mapping.clear()
+        return
 
     for index in xrange(0, len(variable_list1)):
-        if is_variable(variable_list1[index]):
-            dict_mapping[variable_list1[index]] = variable_list2[index]
-            continue
-        if is_variable(variable_list2[index]):
-            dict_mapping[variable_list2[index]] = variable_list1[index]
-            continue
-        if variable_list1[index] != variable_list2[index]:
-            dict_mapping.clear()
+        term1 = variable_list1[index]
+        term2 = variable_list2[index]
+        unify_var(term1, term2, dict_mapping)
+        if not dict_mapping:
             break
 
     for key, value in dict_mapping.iteritems():
-        if is_variable(value) and dict_mapping.has_key(value):
+        if is_variable(value) and dict_mapping.has_key(value) and not is_variable(dict_mapping[value]):
             dict_mapping[key] = dict_mapping[value]
 
 def substitute(dict_substitution, clause):
@@ -228,3 +254,4 @@ if __name__ == '__main__':
             continue
 
     out_file.close()
+
