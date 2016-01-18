@@ -1,5 +1,4 @@
 import sys
-import os.path
 
 
 def int_to_binary(value):
@@ -74,14 +73,8 @@ def get_byte_char(byte_list):
     return ''.join(char_list)
 
 
-def get_output_file_name(input_file_location):
-    file_name_with_ext = os.path.basename(input_file_location)
-    file_name = file_name_with_ext.split('_')[0]
-    return '%s_out.txt' % file_name
-
-
 def process_file(input_file_location):
-    output_file_location = get_output_file_name(input_file_location)
+    output_file_location = 'utf8encoder_out.txt'
     out_file = open(output_file_location, 'wb')
 
     with open(input_file_location, 'rb') as file:
