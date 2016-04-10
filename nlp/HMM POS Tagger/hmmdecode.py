@@ -32,7 +32,7 @@ def read_model_parameters():
             dict_transition[row[0]][row[1]] = float(row[2])
         else:
             dict_transition[row[0]] = {row[1]: float(row[2])}
-        row = csv_reader.next()
+        row = next(csv_reader, None)
 
 
 def process_line(line):
@@ -68,4 +68,4 @@ def process_file(file_path):
 if __name__ == '__main__':
     file_path = sys.argv[1]
     read_model_parameters()
-    process_file(file_path)
+    #process_file(file_path)
