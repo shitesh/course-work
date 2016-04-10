@@ -86,7 +86,6 @@ def write_file():
     out_file = open(OUTPUT_FILE_LOCATION, 'w')
     csv_writer = csv.writer(out_file, delimiter=',')
 
-    csv_writer.writerow(['<emission_start>'])
     for word, tag_dict in dict_emission.iteritems():
         for tag, probability in tag_dict.iteritems():
             csv_writer.writerow([word, tag, probability])
