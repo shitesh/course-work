@@ -2,13 +2,18 @@
 import sys
 import csv
 
-OUTPUT_FILE_LOCATION = ''
+OUTPUT_FILE_LOCATION = 'hmmmodel.txt'
 dict_transition = {}
 dict_emission = {}
 tag_set = set()
 
 
 def update_emission_count(word, tag):
+    """ Updates the emission count dictionary.
+
+    The dictionary contains data in the form {'word' : {'tag1': count, 'tag2': count , 'total_count': total number of times word has occured}}
+    """
+
     global dict_emission, tag_set
 
     tag_set.add(tag)
@@ -23,18 +28,28 @@ def update_emission_count(word, tag):
 
 
 def update_transition_count(start_tag, end_tag):
+    """Updates the transition count dictionary.
+
+    The dictionary stores data in the form {'start_tag': {'to_tag1': count, 'to_tag2': count, 'total_count': total number of times start_tag is present}}
+    """
     global dict_transition
     if start_tag in dict_transition:
         if end_tag in dict_transition[start_tag]:
             dict_transition[start_tag][end_tag] += 1
         else:
             dict_transition[start_tag][end_tag] = 1
-        dict_transition[start_tag]['total_count'] = 1
+        dict_transition[start_tag]['total_count'] += 1
     else:
         dict_transition[start_tag] = {end_tag: 1, 'total_count': 1}
 
 
 def calculate_probabilities():
+    """Updates emission and transition dictionary to change value from count to probability.
+
+    To handle add one smoothing in transition, a separate tag 'others' is created at each start tag level which contains
+    the probability value of all the transitions not observed in training data.
+    """
+
     global dict_emission, dict_transition, tag_set
 
     total_num_tags = len(tag_set)
@@ -60,10 +75,13 @@ def calculate_probabilities():
         del value['total_count']
 
         for tag, count in value.iteritems():
-            value[tag] = float(count)/total_count
+            value[tag] = float(count)/total_word_count
 
 
 def write_file():
+    """Writes the transition and emission probabilities to a file so that it can be used in next step.
+
+    """
     global dict_emission, dict_transition, OUTPUT_FILE_LOCATION
     out_file = open(OUTPUT_FILE_LOCATION, 'w')
     csv_writer = csv.writer(out_file, delimiter=',')
@@ -89,7 +107,7 @@ def process_file(input_path):
         tokens = line.split()
         prev_tag = 'start'
         for token in tokens:
-            word, tag = token.rsplit('/')
+            word, tag = token.rsplit('/', 1)
             update_emission_count(word, tag)
             update_transition_count(prev_tag, tag)
             prev_tag = tag
@@ -98,4 +116,5 @@ def process_file(input_path):
 if __name__ == '__main__':
     input_path = sys.argv[1]
     process_file(input_path)
+    calculate_probabilities()
     write_file()
