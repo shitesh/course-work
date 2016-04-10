@@ -55,10 +55,7 @@ def calculate_probability():
     for word, class_frequency_list in dict_word_frequency.iteritems():
         probability_list = []
         for index, value in enumerate(class_frequency_list):
-            # TODO: recheck this
-            probability = 0
-            if value != 0:
-                probability = math.log(float(value+1)/(dict_class_word_count[index] + total_word_count))
+            probability = math.log(float(value+1)/(dict_class_word_count[index] + total_word_count))
             probability_list.append(probability)
         dict_word_frequency[word] = probability_list
 
@@ -106,7 +103,6 @@ def process_line(line, class_list):
     num_classes = len(DICT_CLASS_INDEX)
     word_list = process_word(line.strip())
 
-    #TODO - add stemming and stripping logic here
     for word in word_list:
         # update word frequency for each class
         class_frequency_list = dict_word_frequency.setdefault(word, [0]*num_classes)
