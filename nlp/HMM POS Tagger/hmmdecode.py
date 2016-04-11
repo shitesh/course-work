@@ -19,7 +19,7 @@ def read_model_parameters():
     csv_reader = csv.reader(file, delimiter=',')
 
     row = csv_reader.next()
-    while row[0] != '<emission_end>':# TODO: rethink if this is good identifier or something else should be taken
+    while row[0] != '<emission_end>':
         if row[0] in dict_emission:
             dict_emission[row[0]][row[1]] = float(row[2])
         else:
@@ -78,9 +78,7 @@ def process_token(word, prev_state_dict, state_source_list):
                     transition_probability = dict_transition[prev_tag][tag]
             else:
                 transition_probability = dict_transition[prev_tag]['others']
-
-            state_probability = emission_probability * transition_probability
-
+            state_probability = prev_probability * emission_probability *transition_probability
             if tag not in dict_word_probability or state_probability > dict_word_probability[tag]:
                 dict_word_probability[tag] = state_probability
                 dict_state_source[tag] = prev_tag
@@ -90,6 +88,10 @@ def process_token(word, prev_state_dict, state_source_list):
 
 
 def process_line(line):
+    """Process each line and return the POS tagged version of the line.
+
+    Implements Viterbi algorithm using backtracking to find out the the best sequence of POS tags for the given line.
+    """
     state_source_list = []
     tokens = line.split()
     state_probability_list = {'start': 1.0}
@@ -99,7 +101,8 @@ def process_line(line):
         state_probability_list = probability_list
 
     tag_list = []
-    max_value, best_tag = 0.0, None
+    max_value, best_tag = -1*sys.maxint, None
+
     for key, value in state_probability_list.iteritems():
         if value > max_value:
             max_value = value
