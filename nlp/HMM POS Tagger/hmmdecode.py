@@ -1,5 +1,6 @@
 import csv
 import sys
+import math
 
 MODEL_FILE = 'hmmmodel.txt'
 OUTPUT_FILE = 'hmmoutput.txt'
@@ -21,9 +22,9 @@ def read_model_parameters():
     row = csv_reader.next()
     while row[0] != '<emission_end>':
         if row[0] in dict_emission:
-            dict_emission[row[0]][row[1]] = float(row[2])
+            dict_emission[row[0]][row[1]] = math.log(float(row[2])) # handling floating point underflow case
         else:
-            dict_emission[row[0]] = {row[1]: float(row[2])}
+            dict_emission[row[0]] = {row[1]: math.log(float(row[2]))}
 
         row = csv_reader.next()
 
@@ -31,9 +32,9 @@ def read_model_parameters():
     while row:
         tag_set.add(row[0])
         if row[0] in dict_transition:
-            dict_transition[row[0]][row[1]] = float(row[2])
+            dict_transition[row[0]][row[1]] = math.log(float(row[2]))
         else:
-            dict_transition[row[0]] = {row[1]: float(row[2])}
+            dict_transition[row[0]] = {row[1]: math.log(float(row[2]))}
         row = next(csv_reader, None)
 
 
@@ -62,7 +63,7 @@ def process_token(word, prev_state_dict, state_source_list):
         # check if any transition is possible
         for key in prev_state_dict:
             transition_tags = set(dict_transition[key].keys())
-            if set(transition_tags).intersection(word_tags): # todo: can i handle this in some other way??
+            if set(transition_tags).intersection(word_tags):
                 overlap_present = True
                 break
 
@@ -76,9 +77,12 @@ def process_token(word, prev_state_dict, state_source_list):
             if overlap_present:
                 if tag in dict_transition[prev_tag]:
                     transition_probability = dict_transition[prev_tag][tag]
+                else:
+                    continue
             else:
                 transition_probability = dict_transition[prev_tag]['others']
-            state_probability = prev_probability * emission_probability *transition_probability
+            state_probability = prev_probability + emission_probability + transition_probability
+
             if tag not in dict_word_probability or state_probability > dict_word_probability[tag]:
                 dict_word_probability[tag] = state_probability
                 dict_state_source[tag] = prev_tag
@@ -94,7 +98,9 @@ def process_line(line):
     """
     state_source_list = []
     tokens = line.split()
-    state_probability_list = {'start': 1.0}
+    # this probability here is actually 1, but as we are using addition while calculating probabilities, so setting the
+    # value as log(1) = 0.0
+    state_probability_list = {'start': 0.0}
 
     for word in tokens:
         probability_list = process_token(word, state_probability_list, state_source_list)
@@ -103,7 +109,7 @@ def process_line(line):
     tag_list = []
     max_value, best_tag = -1*sys.maxint, None
 
-    for key, value in state_probability_list.iteritems():
+   for key, value in state_probability_list.iteritems():
         if value > max_value:
             max_value = value
             best_tag = key
