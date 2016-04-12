@@ -109,7 +109,7 @@ def process_line(line):
     tag_list = []
     max_value, best_tag = -1*sys.maxint, None
 
-   for key, value in state_probability_list.iteritems():
+    for key, value in state_probability_list.iteritems():
         if value > max_value:
             max_value = value
             best_tag = key
