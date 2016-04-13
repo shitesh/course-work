@@ -1,6 +1,6 @@
 # Reads an input file and generate transition probabilities for different tags and emission probabilities for words
 import sys
-import csv
+import codecs
 
 OUTPUT_FILE_LOCATION = 'hmmmodel.txt'
 dict_transition = {}
@@ -83,23 +83,23 @@ def write_file():
 
     """
     global dict_emission, dict_transition, OUTPUT_FILE_LOCATION
-    out_file = open(OUTPUT_FILE_LOCATION, 'w')
-    csv_writer = csv.writer(out_file, delimiter=',')
+
+    out_file = codecs.open(OUTPUT_FILE_LOCATION, 'w', encoding='utf-8')
 
     for word, tag_dict in dict_emission.iteritems():
         for tag, probability in tag_dict.iteritems():
-            csv_writer.writerow([word, tag, probability])
+            out_file.write('%s\x01%s\x01%s\n' % (word, tag, probability))
 
-    csv_writer.writerow(['<emission_end>'])
+    out_file.write('\x01emission\x01end\x01\n')
     for start_tag, transition_dict in dict_transition.iteritems():
         for tag, probability in transition_dict.iteritems():
-            csv_writer.writerow([start_tag, tag, probability])
+            out_file.write('%s\x01%s\x01%s\n' % (start_tag, tag, probability))
 
     out_file.close()
 
 
 def process_file(input_path):
-    file = open(input_path, 'r')
+    file = codecs.open(input_path, 'r', encoding='utf-8')
 
     for line in file:
         line = line.strip()

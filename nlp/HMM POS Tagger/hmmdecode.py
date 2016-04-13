@@ -1,6 +1,7 @@
 import csv
 import sys
 import math
+import codecs
 
 MODEL_FILE = 'hmmmodel.txt'
 OUTPUT_FILE = 'hmmoutput.txt'
@@ -16,26 +17,28 @@ def read_model_parameters():
     """
     global MODEL_FILE, dict_transition, dict_emission
 
-    file = open(MODEL_FILE, 'r')
-    csv_reader = csv.reader(file, delimiter=',')
+    file = codecs.open(MODEL_FILE, 'r', encoding='utf-8')
 
-    row = csv_reader.next()
-    while row[0] != '<emission_end>':
+    line = file.readline()
+    line = line.strip()
+    while line != '\x01emission\x01end\x01':
+        row = line.strip().split('\x01')
         if row[0] in dict_emission:
             dict_emission[row[0]][row[1]] = math.log(float(row[2])) # handling floating point underflow case
         else:
             dict_emission[row[0]] = {row[1]: math.log(float(row[2]))}
 
-        row = csv_reader.next()
+        line = file.readline()
+        line = line.strip()
 
-    row = csv_reader.next()
-    while row:
+    for line in file:
+        row = line.strip().split('\x01')
         tag_set.add(row[0])
         if row[0] in dict_transition:
             dict_transition[row[0]][row[1]] = math.log(float(row[2]))
         else:
             dict_transition[row[0]] = {row[1]: math.log(float(row[2]))}
-        row = next(csv_reader, None)
+
 
 
 def process_token(word, prev_state_dict, state_source_list):
@@ -47,40 +50,26 @@ def process_token(word, prev_state_dict, state_source_list):
     then the default value present in 'others' is considered as transition probability.
     """
 
-    global dict_emission, dict_transition
+    global dict_emission, dict_transition, tag_set
     word_tag_dict = {}
-    overlap_present = False
     if word not in dict_emission: # unknown word case
-        for key in prev_state_dict:
-            for tag in dict_transition[key]:
-                if tag != 'others':
-                    word_tag_dict[tag] = 1.0  # set emission probabilities for all tags as 1
-        overlap_present = True
+        for tag in tag_set:
+            if tag != 'others':
+                word_tag_dict[tag] = 0.0
 
     else: # word present in dict_emission
         word_tag_dict = dict_emission[word]
-        word_tags = set(word_tag_dict.keys())
-        # check if any transition is possible
-        for key in prev_state_dict:
-            transition_tags = set(dict_transition[key].keys())
-            if set(transition_tags).intersection(word_tags):
-                overlap_present = True
-                break
 
     # now the main calculation starts
     dict_word_probability = {}  # contains each possible tag for the word with associated probabilities
     dict_state_source = {}  # source of a given tag, that is which tag of previous state is source of current tag
     for prev_tag, prev_probability in prev_state_dict.iteritems():
         for tag, emission_probability in word_tag_dict.iteritems():
-            transition_probability = 0.0
-
-            if overlap_present:
-                if tag in dict_transition[prev_tag]:
-                    transition_probability = dict_transition[prev_tag][tag]
-                else:
-                    continue
+            if tag in dict_transition[prev_tag]:
+                transition_probability = dict_transition[prev_tag][tag]
             else:
                 transition_probability = dict_transition[prev_tag]['others']
+
             state_probability = prev_probability + emission_probability + transition_probability
 
             if tag not in dict_word_probability or state_probability > dict_word_probability[tag]:
@@ -137,9 +126,9 @@ def process_file(file_path):
     output file.
     """
     global OUTPUT_FILE
-    file = open(file_path, 'r')
+    file = codecs.open(file_path, 'r', encoding='utf-8')
 
-    out_file = open(OUTPUT_FILE, 'w')
+    out_file = codecs.open(OUTPUT_FILE, 'w', encoding='utf-8')
 
     for line in file:
         line = line.strip()
