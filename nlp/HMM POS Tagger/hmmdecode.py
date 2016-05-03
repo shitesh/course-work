@@ -55,7 +55,7 @@ def process_token(word, prev_state_dict, state_source_list):
     if word not in dict_emission: # unknown word case
         for tag in tag_set:
             if tag != 'others':
-                word_tag_dict[tag] = 0.0
+                word_tag_dict[tag] = 0.0 # log value of probability as 0
 
     else: # word present in dict_emission
         word_tag_dict = dict_emission[word]
