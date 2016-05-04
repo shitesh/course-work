@@ -84,6 +84,7 @@ def process_file(file_path):
     all_text = []
     for line in file:
         words = line.strip().split()
+        words = [word.lower() for word in words]
         all_text.append(words)
 
     return all_text
