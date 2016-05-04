@@ -1,2 +1,2 @@
 # course-work
-all assigment/codes for masters course
+all assignment/codes for masters course
