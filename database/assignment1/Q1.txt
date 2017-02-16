@@ -1,0 +1,39 @@
+(Tried on Postgred database)
+Explanation:
+
+We can redesign the table to handle both the issues. Rather than keeping both arrdate and depdate as separate columns we can
+directly keep a single column "occupancyDate" for each room.  The new table schema is as follows:
+
+CREATE TABLE HotelStays(
+    roomNum INTEGER NOT NULL,
+    occupancyDate DATE NOT NULL,
+    guestName CHAR(30) NOT NULL,
+    PRIMARY KEY (roomNum, occupancyDate)
+);
+
+Issue 1: Arrival date can be entered to be later than departure
+=> This issue no longer exists as we don't have separate columns for arrival and departure date. Our new table just tracks
+if a room is occupied on a certain date or not. There is no concept of arrival or departure date in this schema
+
+Issue 2:  A new entry (for a new guest) could be accidentally put in for a room number, even before the existing guest
+in that room has checked out.
+=> This issue also does not exist in the new schema because of the table schema and uniqueness constraint.
+
+In the new schema, if a room is occupied by a user for multiple days by a user we will insert multiple rows for it.
+For example: If a user A stays in room 123 from 2016-02-02 to 2016-02-04 we will have entries in the table as:
+
+ roomnum | occupancydate |           guestname
+---------+---------------+--------------------------------
+     123 | 2016-02-02    | A
+     123 | 2016-02-03    | A
+     123 | 2016-02-04    | A
+
+Now if we try to insert one more entry for user B in the same room for any of the days, an exception will be raised as it
+will violate the unique constraint as shown below:
+
+insert into HotelStays values(123, to_date('20160203', 'YYYYMMDD'), 'B');
+ERROR:  duplicate key value violates unique constraint "hotelstays_pkey"
+DETAIL:  Key (roomnum, occupancydate)=(123, 2016-02-03) already exists.
+
+
+
