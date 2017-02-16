@@ -1,4 +1,4 @@
-(Tried on Postgred database)
+(Tried on Postgres database)
 Explanation:
 
 We can redesign the table to handle both the issues. Rather than keeping both arrdate and depdate as separate columns we can
